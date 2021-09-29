@@ -33,10 +33,13 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body</html>\n");
 });
 
+app.get("/urls.json", (req, res) => {
+  res.json(urlDatabase);
+});
+
 // app.get("/login", (req, res) => {
 
 // });
-
 
 app.post("/login", (req, res) => {
   res.cookie('username', req.body.username);
@@ -44,8 +47,8 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  res.cookie('username', req.body.username);
-  res.clearCookie('username', req.body.username);
+  // res.cookie('username', req.body.username);
+  res.clearCookie('username');
   res.redirect("/urls");
 });
 
@@ -66,6 +69,7 @@ app.post("/urls", (req, res) => {
 app.get("/urls/new", (req, res) => {
   const username = req.cookies.username;
   const templateVars = { username };
+  // console.log(templateVars);
   res.render("urls_new", templateVars);
 });
 
@@ -90,13 +94,6 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
   delete urlDatabase[shortURL];
   res.redirect("/urls");
-});
-
-
-
-
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
 });
 
 
