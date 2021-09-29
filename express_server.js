@@ -19,6 +19,22 @@ const generateRandomString = (length = 6) => {
   return result;
 };
 
+const users = {
+  123: {
+    id: 123, 
+    email: "cindy@cindy.com",
+    password: "nbd"
+  }
+};
+
+const findUserByEmail = (email) => {
+  for (const userId in users) {
+    const user = users[userId];
+    if (user.email === email) {
+      return user
+    }
+  }
+};
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -37,9 +53,29 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-// app.get("/login", (req, res) => {
+app.get("/register", (req, res) => {
+  const username = req.cookies.username;
+  const templateVars = { username };
+  res.render("register", templateVars);
+});
 
+// app.post("/register", (req, res) => {
+//   const email = req.body.email;
+//   const password = req.body.password; 
+
+//   // if(!email || !password) {
+//   //   return res.status(400).send("Email or password cannot be blank");
+//   // }
+
+//   // const id = Math.floor(Math.random() * 2000) + 1;
+//   // users[id] = { id, email, password };
+
+//   res.redirect("/login");
 // });
+
+app.get("/login", (req, res) => {
+  res.render("login");
+});
 
 app.post("/login", (req, res) => {
   res.cookie('username', req.body.username);
