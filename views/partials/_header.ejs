@@ -13,16 +13,24 @@
     </div>
 
     <div class="d-flex flex-row-reverse">
-      <% if(username) { %>
+      <% if(userId) { %>
         <form method="POST" action="/logout"> 
-          <span>Logged in as: <%= username %> </span> 
+          <span>Logged in as: <%= userId.email %> </span> 
           <input class="btn btn-outline-dark" type="submit" value="Log Out">
         </form>
         
       <% } else { %>
       <form method="POST" action="/login"> 
-        <input name="username" placeholder="Username"/>
-        <input class="btn btn-outline-dark" type="submit" value="Log In">
+        <p>Already have an account? 
+          <button type="submit" class="btn btn-outline-dark btn-sm"> 
+            <a href="/login">Log in here.</a>
+          </button>
+        </p>
+        <p> Don't have an account? 
+          <button type="submit" class="btn btn-outline-dark btn-sm">
+            <a href="/register">Register here.</a>
+          </button>
+        </p>
       </form>
       <% } %>
     </div>
