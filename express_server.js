@@ -59,8 +59,8 @@ app.get("/urls.json", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  const userId = req.cookies.user_id;
-  const templateVars = { userId };
+  const user = req.cookies.user;
+  const templateVars = { user };
   res.render("register", templateVars);
 });
 
@@ -72,21 +72,25 @@ app.post("/register", (req, res) => {
     return res.status(400).send("Email or password cannot be blank.");
   }
 
-  const user = findUserByEmail(email);
+  let user = findUserByEmail(email);
   if (user) {
     return res.status(400).send("A user with that email already exists.");
   }
 
   const id = generateRandomString();
-  users[id] = { id, email, password };
+  // user = { id, email, password };
+  // users = { ...users, user }
+  user = { id , email, password };
+  users[id] = user;
+  console.log(users);
 
-  res.cookie("user_id", users[id].id);
+  res.cookie("user", { id: user.id, email: user.email });
   res.redirect("/urls");
 });
 
 app.get("/login", (req, res) => {
-  const userId = req.cookies.user_id;
-  const templateVars = { userId };
+  const user = req.cookies.user;
+  const templateVars = { user };
   res.render("login", templateVars);
 });
 
@@ -95,33 +99,34 @@ app.post("/login", (req, res) => {
   const password = req.body.password;
 
   if (!email || !password) {
-    return res.status(400).send("Email or password cannot be blank.")
+    return res.status(403).send("Email or password cannot be blank.")
   }
 
   const user = findUserByEmail(email);
   console.log(user);
 
   if (!user) {
-    return res.status(400).send("No user with that email exists.")
+    return res.status(403).send("No user with that email exists.")
   }
 
   if (user.password !== password) {
-    return res.status(400).send("Password does not match.")
+    return res.status(403).send("Password does not match.")
   }
 
-  console.log(user.id);
-  res.cookie("user_id", user.id)
+  res.cookie("user", { id: user.id, email: user.email })
+
   res.redirect("/urls");
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie('user_id');
+  res.clearCookie('user');
   res.redirect("/urls");
 });
 
 app.get("/urls", (req, res) => {
-  const userId = req.cookies.user_id;
-  const templateVars = { userId, urls: urlDatabase };
+  const user = req.cookies.user;
+  const templateVars = { user, urls: urlDatabase };
+  console.log(templateVars);
   res.render("urls_index", templateVars);
 });
 
@@ -134,14 +139,14 @@ app.post("/urls", (req, res) => {
 
 
 app.get("/urls/new", (req, res) => {
-  const userId = req.cookies.user_id;
-  const templateVars = { userId };
+  const user = req.cookies.user;
+  const templateVars = { user };
   res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  const userId = req.cookies.user_id;
-  const templateVars = { userId, shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+  const user = req.cookies.user;
+  const templateVars = { user, shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
   res.render("urls_show", templateVars);
 });
 
