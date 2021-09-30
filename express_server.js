@@ -78,11 +78,8 @@ app.post("/register", (req, res) => {
   }
 
   const id = generateRandomString();
-  // user = { id, email, password };
-  // users = { ...users, user }
   user = { id , email, password };
   users[id] = user;
-  console.log(users);
 
   res.cookie("user", { id: user.id, email: user.email });
   res.redirect("/urls");
@@ -103,7 +100,6 @@ app.post("/login", (req, res) => {
   }
 
   const user = findUserByEmail(email);
-  console.log(user);
 
   if (!user) {
     return res.status(403).send("No user with that email exists.")
@@ -126,14 +122,17 @@ app.post("/logout", (req, res) => {
 app.get("/urls", (req, res) => {
   const user = req.cookies.user;
   const templateVars = { user, urls: urlDatabase };
-  console.log(templateVars);
   res.render("urls_index", templateVars);
 });
 
 app.post("/urls", (req, res) => {
+  const user = req.cookies.user;
+  if (!user) {
+    return res.redirect("/login", 401);
+  }
+
   const shortURL = generateRandomString();
-  urlDatabase[shortURL] = req.body.longURL;
-  console.log(req.body);  
+  urlDatabase[shortURL] = req.body.longURL; 
   res.redirect(`/urls/${shortURL}`);         
 });
 
@@ -141,8 +140,16 @@ app.post("/urls", (req, res) => {
 app.get("/urls/new", (req, res) => {
   const user = req.cookies.user;
   const templateVars = { user };
-  res.render("urls_new", templateVars);
+
+  if (!user) {
+    return res.redirect("/login", 401);
+
+  } else {
+    res.render("urls_new", templateVars);
+  }
+
 });
+
 
 app.get("/urls/:shortURL", (req, res) => {
   const user = req.cookies.user;
