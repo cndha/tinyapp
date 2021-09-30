@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require("body-parser");
-const cookieParser = require("cookie-parser")
+const cookieParser = require("cookie-parser");
+const { restart } = require('nodemon');
 const app = express();
 const PORT = 8080; 
 
@@ -29,6 +30,11 @@ const users = {
     id: "user2RandomID",
     email: "user2@example.com",
     password: "yellowturtle"
+  },
+  "random3": {
+    id: "random3",
+    email: "cindy@cindy.com",
+    password: "asd"
   }
 };
 
@@ -41,15 +47,10 @@ const findUserByEmail = (email) => {
   }
 };
 
-// const urlDatabase = {
-//   "b2xVn2": "http://www.lighthouselabs.ca",
-//   "9sm5xK": "http://www.google.com",
-// };
-
 const urlDatabase = {
   "b2xVn2": {
     longURL: "http://www.lighthouselabs.ca",
-    userID: "aJ48lW"
+    userID: "random3"
   },
   "9sm5xK": {
     longURL: "http://www.google.com",
@@ -57,6 +58,16 @@ const urlDatabase = {
   }
 };
 
+const urlsForUser = (id) => {
+  let result = {};
+
+  for (let urls in urlDatabase) {
+    if (urlDatabase[urls].userID === id) {
+      result[urls] = { "longURL": urlDatabase[urls].longURL };
+    }
+  }
+  return result;
+}
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -93,7 +104,7 @@ app.post("/register", (req, res) => {
   user = { id , email, password };
   users[id] = user;
 
-  res.cookie("user", { id: user.id, email: user.email });
+  res.cookie("user", user.id);
   res.redirect("/urls");
 });
 
@@ -112,6 +123,8 @@ app.post("/login", (req, res) => {
   }
 
   const user = findUserByEmail(email);
+  console.log("user:", user);
+  console.log("email:", user.email);
 
   if (!user) {
     return res.status(403).send("No user with that email exists.")
@@ -121,7 +134,8 @@ app.post("/login", (req, res) => {
     return res.status(403).send("Password does not match.")
   }
 
-  res.cookie("user", { id: user.id, email: user.email })
+  console.log("id:", user.id);
+  res.cookie("user", user.id)
 
   res.redirect("/urls");
 });
@@ -132,8 +146,13 @@ app.post("/logout", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
+  if (req.cookies.user === undefined) {
+    res.status(401).send("Must login or register.")
+  }
+
   const user = req.cookies.user;
-  const templateVars = { user, urls: urlDatabase };
+  const clientDatabase = urlsForUser(user);
+  const templateVars = { user, urls: clientDatabase };
   res.render("urls_index", templateVars);
 });
 
@@ -166,24 +185,34 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   const user = req.cookies.user;
   const templateVars = { user, shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL };
-  console.log(templateVars);
   res.render("urls_show", templateVars);
 });
 
-app.get("/u/:shortURL", (req, res) => {
-  
-  const longURL = urlDatabase[req.params.shortURL].longURL;
-  res.redirect(longURL);
-});
-
 app.post("/urls/:shortURL", (req, res) => {
+  if (req.cookies.user !== urlDatabase[req.params.shortURL].userID) {
+    res.status(403).send("You're not authorized to access this feature.")
+  }
+
   const longURL = req.body.longURL;
   urlDatabase[req.params.shortURL] = { longURL: longURL, userID: req.cookies.user };
   res.redirect(`/urls/${req.params.shortURL}`);
 });
 
+app.get("/u/:shortURL", (req, res) => {
+  
+  if (urlDatabase[req.params.shortURL] === undefined) {
+    return res.status(404).send("This url does not exist.")
+  } 
+
+  const longURL = urlDatabase[req.params.shortURL].longURL;
+  res.redirect(longURL);
+});
 
 app.post("/urls/:shortURL/delete", (req, res) => {
+  if (req.cookies.user !== urlDatabase[req.params.shortURL].userID) {
+    res.status(403).send("You're not authorized to access this feature.")
+  }
+
   const shortURL = req.params.shortURL;
   delete urlDatabase[shortURL];
   res.redirect("/urls");
