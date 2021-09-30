@@ -1,6 +1,6 @@
+const cookieSession = require("cookie-session");
 const express = require("express");
 const bodyParser = require("body-parser");
-const cookieParser = require("cookie-parser");
 const bcrypt = require("bcryptjs");
 const { restart } = require("nodemon");
 
@@ -10,7 +10,10 @@ const PORT = 8080;
 app.set('view engine', 'ejs');
 
 app.use(bodyParser.urlencoded({extended: true}));
-app.use(cookieParser());
+app.use(cookieSession({
+  name: "session",
+  keys: ["key1", "key2"],
+}))
 
 const generateRandomString = (length = 6) => {
   let result = '';
@@ -86,7 +89,7 @@ app.get("/urls.json", (req, res) => {
 
 
 app.get("/register", (req, res) => {
-  const user = req.cookies.user;
+  const user = req.session.user;
   const templateVars = { user };
   res.render("register", templateVars);
 });
@@ -106,16 +109,18 @@ app.post("/register", (req, res) => {
   }
 
   const id = generateRandomString();
-  user = { id , email, password };
+  user = { id , email, password: hashedPassword };
   users[id] = user;
+  
+  req.session.user = user.id;
+  console.log(users);
 
-  res.cookie("user", user.id);
   res.redirect("/urls");
 });
 
 
 app.get("/login", (req, res) => {
-  const user = req.cookies.user;
+  const user = req.session.user;
   const templateVars = { user };
   res.render("login", templateVars);
 });
@@ -135,21 +140,21 @@ app.post("/login", (req, res) => {
     return res.status(403).send("Password does not match.")
   }
 
-  res.cookie("user", user.id)
+  req.session.user = user.id;
   res.redirect("/urls");
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie('user');
+  req.session = null;
   res.redirect("/urls");
 });
 
 app.get("/urls", (req, res) => {
-  if (req.cookies.user === undefined) {
+  if (req.session.user === undefined) {
     res.status(401).send("Must login or register.")
   }
 
-  const userId = req.cookies.user;
+  const userId = req.session.user;
   const user = users[userId];
   const clientDatabase = urlsForUser(userId);
   const templateVars = { user, urls: clientDatabase };
@@ -157,19 +162,19 @@ app.get("/urls", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  const user = req.cookies.user;
+  const user = req.session.user;
   if (!user) {
     return res.redirect("/login", 401);
   }
 
   const shortURL = generateRandomString();
-  urlDatabase[shortURL] = { longURL: req.body.longURL, userID: req.cookies.user }; 
+  urlDatabase[shortURL] = { longURL: req.body.longURL, userID: req.session.user }; 
   res.redirect(`/urls/${shortURL}`);         
 });
 
 
 app.get("/urls/new", (req, res) => {
-  const userId = req.cookies.user;
+  const userId = req.session.user;
   const user = users[userId];
   const templateVars = { user };
 
@@ -184,18 +189,18 @@ app.get("/urls/new", (req, res) => {
 
 
 app.get("/urls/:shortURL", (req, res) => {
-  const user = req.cookies.user;
+  const user = req.session.user;
   const templateVars = { user, shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL };
   res.render("urls_show", templateVars);
 });
 
 app.post("/urls/:shortURL", (req, res) => {
-  if (req.cookies.user !== urlDatabase[req.params.shortURL].userID) {
+  if (req.session.user !== urlDatabase[req.params.shortURL].userID) {
     res.status(403).send("You're not authorized to access this feature.")
   }
 
   const longURL = req.body.longURL;
-  urlDatabase[req.params.shortURL] = { longURL: longURL, userID: req.cookies.user };
+  urlDatabase[req.params.shortURL] = { longURL: longURL, userID: req.session.user };
   res.redirect(`/urls/${req.params.shortURL}`);
 });
 
@@ -210,7 +215,7 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  if (req.cookies.user !== urlDatabase[req.params.shortURL].userID) {
+  if (req.session.user !== urlDatabase[req.params.shortURL].userID) {
     res.status(403).send("You're not authorized to access this feature.")
   }
 
