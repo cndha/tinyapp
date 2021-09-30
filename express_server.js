@@ -1,7 +1,9 @@
-const express = require('express');
+const express = require("express");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
-const { restart } = require('nodemon');
+const bcrypt = require("bcryptjs");
+const { restart } = require("nodemon");
+
 const app = express();
 const PORT = 8080; 
 
@@ -24,17 +26,17 @@ const users = {
   "userRandomID": {
     id: "userRandomID", 
     email: "user@example.com",
-    password: "purplemonkey"
+    password: "$2a$10$gr2qnjK9AMjHyqkPZ9lCteEL3jI11Yp9PJqgjfq28Wirzp1w1TG.e"
   },
   "user2RandomID": {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "yellowturtle"
+    password: "$2a$10$iXS46KnTdnbDn9qowEUrheuivcZff4kxOweMkmDr3hmxcHOAjhIUK"
   },
   "random3": {
     id: "random3",
     email: "cindy@cindy.com",
-    password: "asd"
+    password: "$2a$10$K9OY.rhUoo/Uy4y/LYBQpuGv5ch.KRvUzE099miU8JLz1Ah.ux2Ha"
   }
 };
 
@@ -69,6 +71,7 @@ const urlsForUser = (id) => {
   return result;
 }
 
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -81,6 +84,7 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
+
 app.get("/register", (req, res) => {
   const user = req.cookies.user;
   const templateVars = { user };
@@ -89,8 +93,9 @@ app.get("/register", (req, res) => {
 
 app.post("/register", (req, res) => {
   const email = req.body.email;
-  const password = req.body.password; 
-
+  const password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(password, 10);
+  
   if (!email || !password) {
     return res.status(400).send("Email or password cannot be blank.");
   }
@@ -108,6 +113,7 @@ app.post("/register", (req, res) => {
   res.redirect("/urls");
 });
 
+
 app.get("/login", (req, res) => {
   const user = req.cookies.user;
   const templateVars = { user };
@@ -123,20 +129,13 @@ app.post("/login", (req, res) => {
   }
 
   const user = findUserByEmail(email);
-  console.log("user:", user);
-  console.log("email:", user.email);
+  console.log("user in POST login:", user);
 
-  if (!user) {
-    return res.status(403).send("No user with that email exists.")
-  }
-
-  if (user.password !== password) {
+  if (!bcrypt.compareSync(password, user.password)) {
     return res.status(403).send("Password does not match.")
   }
 
-  console.log("id:", user.id);
   res.cookie("user", user.id)
-
   res.redirect("/urls");
 });
 
@@ -150,8 +149,9 @@ app.get("/urls", (req, res) => {
     res.status(401).send("Must login or register.")
   }
 
-  const user = req.cookies.user;
-  const clientDatabase = urlsForUser(user);
+  const userId = req.cookies.user;
+  const user = users[userId];
+  const clientDatabase = urlsForUser(userId);
   const templateVars = { user, urls: clientDatabase };
   res.render("urls_index", templateVars);
 });
@@ -169,7 +169,8 @@ app.post("/urls", (req, res) => {
 
 
 app.get("/urls/new", (req, res) => {
-  const user = req.cookies.user;
+  const userId = req.cookies.user;
+  const user = users[userId];
   const templateVars = { user };
 
   if (!user) {
