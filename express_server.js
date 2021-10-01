@@ -6,20 +6,20 @@ const { restart } = require("nodemon");
 const { getUserByEmail, generateRandomString } = require("./helpers");
 
 const app = express();
-const PORT = 8080; 
+const PORT = 8080;
 
 app.set('view engine', 'ejs');
 
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieSession({
   name: "session",
   keys: ["key1", "key2"],
-}))
+}));
 
 
 const users = {
   "userRandomID": {
-    id: "userRandomID", 
+    id: "userRandomID",
     email: "user@example.com",
     password: "$2a$10$gr2qnjK9AMjHyqkPZ9lCteEL3jI11Yp9PJqgjfq28Wirzp1w1TG.e"
   },
@@ -85,7 +85,7 @@ app.get("/login", (req, res) => {
 
 app.get("/urls", (req, res) => {
   if (req.session.user === undefined) {
-    return res.status(401).send("Must login or register.")
+    return res.status(401).send("Must login or register.");
   }
 
   const userId = req.session.user;
@@ -102,7 +102,7 @@ app.get("/urls/new", (req, res) => {
   
   if (!user) {
     return res.redirect("/login");
-  } 
+  }
   
   res.render("urls_new", templateVars);
 });
@@ -110,11 +110,11 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   
   if (urlDatabase[req.params.shortURL] === undefined) {
-    return res.status(404).send("This url does not exist.")
-  } 
+    return res.status(404).send("This url does not exist.");
+  }
 
   if (req.session.user !== urlDatabase[req.params.shortURL].userID) {
-    return res.status(403).send("You're not authorized to access this feature.")
+    return res.status(403).send("You're not authorized to access this feature.");
   }
 
   const userId = req.session.user;
@@ -127,8 +127,8 @@ app.get("/urls/:shortURL", (req, res) => {
 app.get("/u/:shortURL", (req, res) => {
   
   if (urlDatabase[req.params.shortURL] === undefined) {
-    return res.status(404).send("This url does not exist.")
-  } 
+    return res.status(404).send("This url does not exist.");
+  }
 
   const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
@@ -163,17 +163,17 @@ app.post("/login", (req, res) => {
   const password = req.body.password;
 
   if (!email || !password) {
-    return res.status(403).send("Email or password cannot be blank.")
+    return res.status(403).send("Email or password cannot be blank.");
   }
 
   const user = getUserByEmail(email, users);
 
   if (!user) {
-    return res.status(403).send("User does not exist.")
+    return res.status(403).send("User does not exist.");
   }
 
   if (!bcrypt.compareSync(password, user.password)) {
-    return res.status(403).send("Password does not match.")
+    return res.status(403).send("Password does not match.");
   }
 
   req.session.user = user.id;
@@ -192,13 +192,13 @@ app.post("/urls", (req, res) => {
   }
 
   const shortURL = generateRandomString();
-  urlDatabase[shortURL] = { longURL: req.body.longURL, userID: req.session.user }; 
-  res.redirect(`/urls/${shortURL}`);         
+  urlDatabase[shortURL] = { longURL: req.body.longURL, userID: req.session.user };
+  res.redirect(`/urls/${shortURL}`);
 });
 
 app.post("/urls/:shortURL", (req, res) => {
   if (req.session.user !== urlDatabase[req.params.shortURL].userID) {
-    return res.status(403).send("You're not authorized to access this feature.")
+    return res.status(403).send("You're not authorized to access this feature.");
   }
 
   const longURL = req.body.longURL;
@@ -208,7 +208,7 @@ app.post("/urls/:shortURL", (req, res) => {
 
 app.post("/urls/:shortURL/delete", (req, res) => {
   if (req.session.user !== urlDatabase[req.params.shortURL].userID) {
-    return res.status(403).send("You're not authorized to access this feature.")
+    return res.status(403).send("You're not authorized to access this feature.");
   }
 
   const shortURL = req.params.shortURL;
