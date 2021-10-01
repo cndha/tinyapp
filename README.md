@@ -6,9 +6,9 @@ TinyApp is a full stack web application built with Node and Express that allows 
 
 ## Final Product
 
-![User's homepage: list of urls they have converted from long to short URLs. Long URLs can be edited and shortURLs can be discarded.](#)
+![User's homepage: list of urls they have converted from long to short URLs. Long URLs can be edited and shortURLs can be discarded.](https://github.com/cndha/tinyapp/blob/master/Final%20Product/URLS.png)
 
-![User's edit section. Long URLs can be edited to corresponding shortURL.](#)
+![User's edit section. Long URLs can be edited to corresponding shortURL.](https://github.com/cndha/tinyapp/blob/master/Final%20Product/EditURL.png)
 
 ## Dependencies
 
