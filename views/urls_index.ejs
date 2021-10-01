@@ -27,9 +27,9 @@
             <td><%= url %></td>
             <td><%= urls[url].longURL %></td>
             <td>
-                <button type="submit" class="btn btn-outline-primary">
-                  <a href="/urls/<%= url %>">Edit</a>
-                </button>
+              <form method="GET" action="/urls/<%= url %>">  
+                <button type="submit" class="btn btn-outline-primary">Edit</button>
+              </form>
             </td>
             <td>
               <form method="POST" action="/urls/<%= url %>/delete">
@@ -38,9 +38,8 @@
             </td>
           </tr>
         <% } %>
-
       </tbody>
-    
+      <a method="GET" href="/urls/new">Create a New Short Link. Click here!</a>
     </table>
   </main>
 
