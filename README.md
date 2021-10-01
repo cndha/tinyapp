@@ -9,7 +9,6 @@ TinyApp is a full-stack web application built with **Node** and **Express** that
 
 !["User's edit section. Long URLs can be edited to corresponding shortURL."](https://github.com/cndha/tinyapp/blob/master/docs/edit-page.png)
 
-!["Users must be registered and logged in to create short URLs"] (https://github.com/cndha/tinyapp/blob/master/docs/register-page.png)
 
 ## Dependencies
 
