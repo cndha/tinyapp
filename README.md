@@ -1,6 +1,6 @@
 # TinyApp Project
 
-TinyApp is a full-stack web application built with **Node** and **Express** that allows users to shorten long URLs *(à la bit.ly)*. Users are able to update the long links that pertain to a certain short URL after creation, or discard the shortened link. A simple tool made to share content without taking up your sweet tweet characters, and replacing that eye-sore of a long URL nobody reads anyway. 
+TinyApp is a full-stack web application built with **Node** and **Express** that allows users to shorten long URLs *(à la bit.ly)*. Users are able to update the long URLs that pertain to a certain short link after creation, or discard the shortened link. A simple tool made to share content without taking up your sweet tweet characters, and replacing that eye-sore of a long URL nobody reads anyway. 
 
 
 ## Final Product
