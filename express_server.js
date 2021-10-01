@@ -108,6 +108,11 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
+  
+  if (urlDatabase[req.params.shortURL] === undefined) {
+    return res.status(404).send("This url does not exist.")
+  } 
+
   if (req.session.user !== urlDatabase[req.params.shortURL].userID) {
     return res.status(403).send("You're not authorized to access this feature.")
   }
