@@ -61,9 +61,11 @@ const urlsForUser = (id) => {
 app.get("/", (req, res) => {
   const userId = req.session.user;
   const user = users[userId];
+  
   if (!user) {
     return res.redirect("/login");
   }
+  
   res.redirect("/urls");
 });
 
@@ -72,14 +74,18 @@ app.get("/urls.json", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  const user = req.session.user;
+  const userId = req.session.user;
+  const user = users[userId];
   const templateVars = { user };
+  
   res.render("register", templateVars);
 });
 
 app.get("/login", (req, res) => {
-  const user = req.session.user;
+  const userId = req.session.user;
+  const user = users[userId];
   const templateVars = { user };
+  
   res.render("login", templateVars);
 });
 
@@ -89,9 +95,10 @@ app.get("/urls", (req, res) => {
   }
 
   const userId = req.session.user;
-  const user = users[userId];
   const clientDatabase = urlsForUser(userId);
+  const user = users[userId];
   const templateVars = { user, urls: clientDatabase };
+  
   res.render("urls_index", templateVars);
 });
 
@@ -120,6 +127,7 @@ app.get("/urls/:shortURL", (req, res) => {
   const userId = req.session.user;
   const user = users[userId];
   const templateVars = { user, shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL };
+  
   res.render("urls_show", templateVars);
 });
 
@@ -146,14 +154,15 @@ app.post("/register", (req, res) => {
   }
 
   let user = getUserByEmail(email, users);
+  
   if (user) {
-    return res.status(400).send("A user with that email already exists.");
+    return res.status(400).send("A user with that email already exists. Please login.");
   }
 
   const id = generateRandomString();
   user = { id , email, password: hashedPassword };
   users[id] = user;
-  
+
   req.session.user = user.id;
   res.redirect("/urls");
 });
@@ -186,23 +195,27 @@ app.post("/logout", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  const user = req.session.user;
-  if (!user) {
+  const userId = req.session.user;
+
+  if (!userId) {
     return res.redirect("/login").status(401);
   }
 
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = { longURL: req.body.longURL, userID: req.session.user };
+
   res.redirect(`/urls/${shortURL}`);
 });
 
 app.post("/urls/:shortURL", (req, res) => {
+  
   if (req.session.user !== urlDatabase[req.params.shortURL].userID) {
     return res.status(403).send("You're not authorized to access this feature.");
   }
 
   const longURL = req.body.longURL;
   urlDatabase[req.params.shortURL] = { longURL: longURL, userID: req.session.user };
+  
   res.redirect("/urls");
 });
 
